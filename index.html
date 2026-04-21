@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sistema Administrativo</title>
+</head>
+<body>
+
+<h1>Login</h1>
+
+<input id="email" placeholder="Email"><br><br>
+<input id="senha" placeholder="Senha" type="password"><br><br>
+
+<button onclick="login()">Entrar</button>
+
+<hr>
+
+<h2>Usuários</h2>
+<button onclick="carregarUsuarios()">Carregar usuários</button>
+
+<ul id="listaUsuarios"></ul>
+
+<hr>
+
+<h2>Criar Usuário</h2>
+
+<input id="nome" placeholder="Nome"><br>
+<input id="emailNovo" placeholder="Email"><br>
+<input id="senhaNova" placeholder="Senha"><br>
+<input id="cpf" placeholder="CPF"><br><br>
+
+<button onclick="criarUsuario()">Criar</button>
+
+<script>
+const API = "http://127.0.0.1:3001";
+
+// ---------------- LOGIN ----------------
+function login() {
+    fetch(API + "/login", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            email: email.value,
+            senha: senha.value
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.sucesso) {
+            alert("Login realizado!");
+        } else {
+            alert(data.erro);
+        }
+    });
+}
+
+// ---------------- LISTAR USUÁRIOS ----------------
+function carregarUsuarios() {
+    fetch(API + "/usuarios")
+    .then(res => res.json())
+    .then(data => {
+        let lista = document.getElementById("listaUsuarios");
+        lista.innerHTML = "";
+
+        data.forEach(u => {
+            let li = document.createElement("li");
+
+            li.innerHTML = `
+                ${u.nome} - ${u.email}
+                <button onclick="ver(${u.id})">Ver</button>
+                <button onclick="deletar(${u.id})">Excluir</button>
+            `;
+
+            lista.appendChild(li);
+        });
+    });
+}
+
+// ---------------- VER USUÁRIO ----------------
+function ver(id) {
+    fetch(API + "/usuarios/" + id)
+    .then(res => res.json())
+    .then(u => {
+        alert("Nome: " + u.nome + "\nEmail: " + u.email + "\nCPF: " + u.cpf);
+    });
+}
+
+// ---------------- DELETAR USUÁRIO ----------------
+function deletar(id) {
+    fetch(API + "/usuarios/" + id, {
+        method: "DELETE"
+    })
+    .then(() => carregarUsuarios());
+}
+
+// ---------------- CRIAR USUÁRIO ----------------
+function criarUsuario() {
+    fetch(API + "/usuarios", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            nome: nome.value,
+            email: emailNovo.value,
+            senha: senhaNova.value,
+            cpf: cpf.value
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert(data.msg || data.erro);
+        carregarUsuarios();
+    });
+}
+</script>
+
+</body>
+</html>

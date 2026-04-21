@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Produtos</title>
+</head>
+<body>
+
+<h1>Gerenciamento de Produtos</h1>
+
+<!-- CADASTRAR PRODUTO -->
+<h2>Cadastrar Produto</h2>
+
+<input id="nome" placeholder="Nome"><br>
+<input id="preco" placeholder="Preço"><br>
+<input id="tipo" placeholder="Tipo"><br>
+<input id="descricao" placeholder="Descrição"><br>
+<input id="validade" placeholder="Validade"><br><br>
+
+<button onclick="criarProduto()">Cadastrar</button>
+
+<hr>
+
+<!-- LISTA -->
+<h2>Lista de Produtos</h2>
+
+<button onclick="carregarProdutos()">Carregar Produtos</button>
+
+<ul id="listaProdutos"></ul>
+
+<script>
+const API = "http://127.0.0.1:3001";
+
+// ---------------- CRIAR PRODUTO ----------------
+function criarProduto() {
+    fetch(API + "/produtos", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            nome: nome.value,
+            preco: preco.value,
+            tipo: tipo.value,
+            descricao: descricao.value,
+            validade: validade.value
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert(data.msg);
+        carregarProdutos();
+    });
+}
+
+// ---------------- LISTAR ----------------
+function carregarProdutos() {
+    fetch(API + "/produtos")
+    .then(res => res.json())
+    .then(data => {
+        let lista = document.getElementById("listaProdutos");
+        lista.innerHTML = "";
+
+        data.forEach(p => {
+            let precoFinal = p.promocao ?
+                "🔥 R$ " + p.preco_promocional :
+                "R$ " + p.preco;
+
+            let li = document.createElement("li");
+
+            li.innerHTML = `
+                <b>${p.nome}</b> - ${precoFinal} <br>
+                Tipo: ${p.tipo} <br>
+                Validade: ${p.validade} <br>
+                <button onclick="aplicarPromo(${p.id})">Promoção</button>
+                <button onclick="removerPromo(${p.id})">Remover Promo</button>
+                <button onclick="deletarProduto(${p.id})">Excluir</button>
+                <hr>
+            `;
+
+            lista.appendChild(li);
+        });
+    });
+}
+
+// ---------------- PROMOÇÃO ----------------
+function aplicarPromo(id) {
+    let valor = prompt("Preço promocional:");
+
+    fetch(API + "/produtos/" + id + "/promocao", {
+        method: "PUT",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            preco_promocional: valor
+        })
+    })
+    .then(() => carregarProdutos());
+}
+
+// ---------------- REMOVER PROMO ----------------
+function removerPromo(id) {
+    fetch(API + "/produtos/" + id + "/remover", {
+        method: "PUT"
+    })
+    .then(() => carregarProdutos());
+}
+
+// ---------------- DELETAR ----------------
+function deletarProduto(id) {
+    fetch(API + "/produtos/" + id, {
+        method: "DELETE"
+    })
+    .then(() => carregarProdutos());
+}
+</script>
+
+</body>
+</html>
